@@ -1,0 +1,8 @@
+input:
+  image_folder: '../nikon_raw_data/Ethanolamin_08_COX20/'
+  model_budscar_path: '../models/best.pt'
+  screen_folder: '../screening_codes/'
+  local_batch_folder_path: './input_batches'
+  output_batch_folder_path: '../remote_save_path/'
+  CPU_COUNT: 12
+  BATCH_SIZE: 2

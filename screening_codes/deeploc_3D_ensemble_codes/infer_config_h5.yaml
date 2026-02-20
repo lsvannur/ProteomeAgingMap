@@ -1,0 +1,5 @@
+input:
+  running_batch_name: 'plate_name'
+  batch_folder_path: '../screened_plate_h5_path/'
+  modelpath_3d: '../../models/3d-Resnet10_3D_24_0.94.pth'
+  modelpath_2d: '../../models/transfer_v2/full_training_dataset.ckpt'
