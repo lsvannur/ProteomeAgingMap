@@ -1,8 +1,7 @@
 # 🧬 ProteomeAgingMap  
-**The Spatiotemporal Proteome Landscape of Aging: Structural Determinants of Age-Sensitive Proteome Remodeling**  
+**The Spatiotemporal Proteome Landscape of Aging: Structural Determinants of Age-Sensitive Proteome Remodeling** Yoo, S., Vannur, L., Li, L.*, Young, C., Liu, Q., Wen, Z. T., Zhang, Y., Florens, L., Si, K., Zhuang, J., Zheng, F., & Zhou, C.#
 
-Yoo, S., Vannur, L., Li, L.*, Young, C., Liu, Q., Wen, Z. T., Zhang, Y., Florens, L., Si, K., Zhuang, J., Zheng, F., & Zhou, C.#
-
+**Single-Cell Spatial Proteomics Uncovers Molecular Interconnectivity among Hallmarks of Aging.** Yoo, S., Young, C., Li, L., Vannur, L., Zhuang, J., Zheng, F., Wu, M., Andersen, J. K., & Zhou, C.#
 ---
 
 # Installation
