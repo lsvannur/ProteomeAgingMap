@@ -175,48 +175,28 @@ def run_3d(data, model_path, running_batch_name):
     model=finalized_model
     model.to(device)
     with torch.no_grad():
-        test_loss = 0.0
         preds = []
         all_pred_probs = []
-        true_labels = []
         all_last_layer_output = []
         epoch_iterator_test = tqdm(dataset_whole_dl)
         for step, batch in enumerate(epoch_iterator_test):
             model.eval()
-            images, targets = batch["image"].to(device), batch["target"].to(device)
+            images = batch["image"].to(device)
 
             outputs = model(images)
             penultimate_output = model.penultimate_forward(images).cpu().numpy()
-            loss = criterion(outputs, targets)
-            test_loss += loss.item()
-            epoch_iterator_test.set_postfix(
-                batch_loss=(loss.item()), loss=(test_loss / (step + 1))
-            )
+            
             pred_probs = torch.softmax(outputs, dim=1)
             all_pred_probs.append(pred_probs.cpu().numpy())
             preds.append(torch.argmax(outputs, dim=1).cpu().numpy())
-            true_labels.append(torch.argmax(targets,dim=1).cpu().numpy())
             all_last_layer_output.append(penultimate_output)
 
         preds = np.concatenate(preds)
-        true_labels = np.concatenate(true_labels)
         all_pred_probs = np.concatenate(all_pred_probs)
-        acc_score = accuracy_score(true_labels, preds)
-        f1 = f1_score(true_labels, preds, average='weighted')
-        precision = precision_score(true_labels, preds, average=None)
-        recall = recall_score(true_labels, preds, average=None)
-
-        print(
-            f"TEST: Average loss: {test_loss/(step+1)} + Accuracy = {acc_score} + F1 Score = {f1}"
-        )
-        print(f"Precision per class: {precision}")
-        print(f"Recall per class: {recall}")
-
 
     #Penultimate layer features
     all_outs = np.concatenate(all_last_layer_output)
     all_outs = pd.DataFrame(all_outs)
-    all_outs['true_labels'] = true_labels
     all_outs['preds'] = preds
     all_outs['gfp_image_names'] = gfp_image_names
     all_outs['mask_image_names'] = mask_image_names
@@ -230,7 +210,6 @@ def run_3d(data, model_path, running_batch_name):
     #Predicted Probabilities
     ans3d = pd.DataFrame(all_pred_probs, columns=list(rev_label_map.keys()))
     ans3d['preds'] = preds
-    ans3d['true_labels'] = true_labels
     ans3d['gfp_image_names'] = gfp_image_names
     ans3d['cw_well_names'] = cw_well_names
     ans3d['combined'] = ans3d['cw_well_names'].str.cat(ans3d['gfp_image_names'], sep='_')
@@ -300,22 +279,5 @@ if __name__ == '__main__':
 
         data_final = {'cw_well_names': cw_well_names, 'masks': masks_images, 'mask_image_names': masks_names, 'gfp_image_names': gfp_names, 'gfp_images': gfp_images}
         print(len(gfp_images), len(gfp_names), len(masks_images), len(masks_names), len(cw_well_names))
-
-
-        # scar_names = []
-        # scar_images = []
-        # scar_well_names = []
-        # for key, val in data['scar_z_crop'].items():
-        #     for scar_key,  scar_val in val.items():
-        #         scar_names.append(scar_key)
-        #         scar_images.append(scar_val)
-        #         scar_well_names.append(key)
-
-        # final_scar = {'scar_names': scar_names, 'scar_images': scar_images, 'scar_well_names':scar_well_names}
-        # print(len(final_scar['scar_images']), len(scar_names), len(scar_well_names))
-
-
-        # with open(f'{running_batch_name_temp}_scar_crop.pkl', 'wb') as file:
-        #         pickle.dump(final_scar, file)
 
         run_3d(data_final, modelpath, running_batch_name_temp)

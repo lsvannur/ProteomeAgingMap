@@ -135,9 +135,9 @@ def nd2_load(input_folder_path, input_batch_folder_path, output_folder_path, CPU
     end = time.time()
     print(f"================== All Batches processed and loaded nd2(HDF5) in {end-start} seconds! ===================")
 
-if __name__ == '__main__':
-    nd2_load('/home/zhoulab/Documents/nikon_raw_data/NG7/20240715_NG7-4_Old_Plate1/',
-             '/home/zhoulab/Documents/newversion_codes/input_batches',
-             '/run/user/1000/gvfs/smb-share:server=bigrock,share=zhoulab/Raj/cellintegration/outputs_batches',
-             CPU_COUNT=12, BATCH_SIZE=1)
+# if __name__ == '__main__':
+#     nd2_load('src_folder_path',
+#              'input_path_to_save_batch_csv',
+#              'output_path_to_save_batches_remote_server',
+#              CPU_COUNT=12, BATCH_SIZE=1)
 

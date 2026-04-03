@@ -97,7 +97,6 @@ def eval(combined_batch, locNetCkpt, running_batch_name, savepath, hdf5file, min
     # Prepare to store predictions, penultimate layer outputs, and true labels
     allPred = pd.DataFrame(np.zeros((len(combined_batch['data']), len(localizationTerms)), dtype=float), columns=localizationTerms)
     penultimate_layer_outputs = []  # To store outputs of the penultimate layer
-    true_labels = []
     preds = []
 
     # Process data in batches
@@ -128,7 +127,6 @@ def eval(combined_batch, locNetCkpt, running_batch_name, savepath, hdf5file, min
 
         # Update predictions and true labels
         allPred.iloc[batch_start:batch_start + len(predictedBatch_Loc), :] = predictedBatch_Loc
-        true_labels.extend(np.argmax(np.array(testBatchAll['Index']), axis=1))
         preds.extend(np.argmax(predictedBatch_Loc, axis=1))
 
         # Collect penultimate layer outputs for this batch (average across crops)
@@ -136,22 +134,10 @@ def eval(combined_batch, locNetCkpt, running_batch_name, savepath, hdf5file, min
         penultimate_layer_outputs.extend(np.mean(penultimate_batch, axis=1))  # Average across crops
 
     # Compute metrics after processing all batches
-    true_labels = np.array(true_labels)
     preds = np.array(preds)
-
-    acc_score = accuracy_score(true_labels, preds)
-    f1 = f1_score(true_labels, preds, average='weighted')
-    precision = precision_score(true_labels, preds, average=None)
-    recall = recall_score(true_labels, preds, average=None)
-
-    # Output results
-    print(f"Accuracy: {acc_score}")
-    print(f"F1 Score: {f1}")
-    print(f"Precision: {precision}")
-    print(f"Recall: {recall}")
-
+    
+    
     # Save the prediction dataframe
-    allPred['true_labels'] = true_labels
     allPred['preds'] = preds
     basename_pred = hdf5file.split('.')[0]
     allPred.to_csv(f"{savepath}/predictions_2d/{basename_pred}_predprob_2d.csv", index=None)
@@ -159,7 +145,6 @@ def eval(combined_batch, locNetCkpt, running_batch_name, savepath, hdf5file, min
     # Save the penultimate layer outputs to a file (optional)
     penultimate_layer_outputs = np.array(penultimate_layer_outputs)
     pen_outputs= pd.DataFrame(penultimate_layer_outputs)
-    pen_outputs['true_labels'] = true_labels
     pen_outputs['preds'] = preds
     basename_penult = hdf5file.split('.')[0]
     pen_outputs.to_csv(f'{savepath}/penult_2d/penult_{basename_penult}_2d.csv', index=None)
