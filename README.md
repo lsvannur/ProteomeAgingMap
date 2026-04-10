@@ -1,33 +1,70 @@
-# 🧬 ProteomeAgingMap  
+# ProteomeAgingMap  
 1. [**The Spatiotemporal Proteome Landscape of Aging: Structural Determinants of Age-Sensitive Proteome Remodeling**](https://www.biorxiv.org/content/10.64898/2026.02.26.708310v1) Yoo, S., Vannur, L., Li, L.*, Young, C., Liu, Q., Wen, Z. T., Zhang, Y., Florens, L., Si, K., Zhuang, J., Zheng, F., & Zhou, C.#
 
 2. [**Single-Cell Spatial Proteomics Uncovers Molecular Interconnectivity among Hallmarks of Aging.**](https://www.biorxiv.org/content/10.64898/2026.02.26.708335v1) Yoo, S., Young, C., Li, L., Vannur, L., Zhuang, J., Zheng, F., Wu, M., Andersen, J. K., & Zhou, C.#
 
 ---
 
-# Installation
+## Overview
 
-## System Requirements
+**ProteomeAgingMap** provides a computational pipeline for large-scale analysis of proteome remodeling during aging. The framework enables:
+
+- Preprocessing of microscopy `.nd2` datasets  
+- Cell segmentation and postprocessing  
+- Bud scar detection and quantification  
+- GFP intensity extraction  
+- Subcellular localization prediction using DeepLoc (2D) and a ResNet 3D model  
+- Ensemble-based localization inference  
+
+---
+
+## Installation
+
+### System Requirements
 
 - **OS:** Linux (Ubuntu 20.04+ recommended), macOS, Windows  
 - **CPU:** ≥ 8 cores recommended  
-- **RAM:** ≥ 16 GB (≥ 64 GB for large-scale datasets)  
+- **RAM:** ≥ 16 GB (≥ 64 GB recommended for large datasets)  
 - **Storage:** ≥ 50 GB free space  
 
 ---
 
-## 📦 Dependencies
+### Dependencies
 
-### Software
 - **Python:** 3.9 – 3.11  
 - **Optional:** CUDA-enabled GPU for accelerated inference  
 
-**Tested Environment:**
+**Tested Environment**
 - GPU: NVIDIA RTX 6000 Ada Generation  
 - CUDA: 12.9  
 - NVIDIA Driver: 575.57.08  
 
 ---
+
+## Setup
+
+```bash
+git clone https://github.com/lsvannur/ProteomeAgingMap.git
+cd ProteomeAgingMap/screening_codes
+conda env create -f environment.yml
+conda activate gpuenv
+mkdir input_batches ```
+
+# Installation
+
+## System Requirements and Dependencies
+
+- **Operating System:** Linux (Ubuntu 20.04+ recommended), macOS, Windows  
+- **Python:** 3.9 – 3.11  
+- **CPU:** ≥ 8 cores recommended  
+- **RAM:** ≥ 16 GB (≥ 64 GB recommended for large-scale datasets)  
+- **Storage:** ≥ 50 GB free space  
+- **GPU (optional):** CUDA-enabled GPU for accelerated inference  
+
+**Tested Environment:**
+- GPU: NVIDIA RTX 6000 Ada Generation  
+- CUDA: 12.9  
+- NVIDIA Driver: 575.57.08  
 
 ## Setup Instructions
 
@@ -57,7 +94,7 @@ BATCH_SIZE: Adjust based on RAM/GPU
 python main.py
 ```
 
-## Inference: Predict Subcellular Localization
+## Inference: To Predict Subcellular Localization over those cells run
 ```bash
 cd deeploc_3D_ensemble_codes
 ```

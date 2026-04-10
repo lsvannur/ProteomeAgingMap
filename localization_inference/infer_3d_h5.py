@@ -1,47 +1,28 @@
+import os
+import h5py
+import yaml
+from tqdm import tqdm
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-
 import torch
-from torch.utils.data import Dataset
-import nibabel as nib
-from collections import Counter
-import pickle
-from collections import defaultdict
-from sklearn.preprocessing import OneHotEncoder
-import argparse
-import os
-import monai
 import torch.nn as nn
-import torch.optim as optim
-from torch.optim import lr_scheduler
-from tqdm import tqdm
-from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
-import pickle
+from torch.utils.data import Dataset
+import monai
 from utils import *
 
-import h5py
-import re
-import glob
-import yaml
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
-
 class Custom3DDataset(Dataset):
-    def __init__(self, data, label, ds_type="train"):
+    def __init__(self, data, ds_type="train"):
         self.data = data
         self.ds_type = ds_type
-        self.label = label
-
+        
     def __len__(self):
         return len(self.data)
 
     def __getitem__(self, idx):
-        # Assuming `image_path` and `label` columns in the dataframe
         img = self.data[idx]
-        label = self.label[idx]
-
+        
         img = img.astype(np.float32)
         img = np.expand_dims(img, axis=0)  # Add channel dimension
 
@@ -52,31 +33,16 @@ class Custom3DDataset(Dataset):
         if img.shape != (1, 8, 64, 64):
             raise ValueError(f"Unexpected image shape: {img.shape}")
 
-
-        #label = int(label)
-
-        sample = {
-            'image': torch.tensor(img, dtype=torch.float32),
-            'target': torch.tensor(label, dtype=torch.float32)
-        }
-
+        sample = {'image': torch.tensor(img, dtype=torch.float32)}
         return sample
 
 
-def prepare_data(df, rev_label_map):
-    df = df[(df['labels']!='punctate composite') & (df['labels']!='microtubule')]
-    df['labels'] = df['labels'].str.replace(' ', '_')
+def prepare_data(df):
     df = df.reset_index(drop=True)
 
     features = df['features']
-    labels = df['labels']
-    labels_encoded = [rev_label_map[i] for i in labels]
-    labels_onehot = np.zeros((len(labels_encoded), 17))
-    for index, labelid in enumerate(labels_encoded):
-        labels_onehot[index][labelid] = 1
-
     
-    dataset_whole = Custom3DDataset(data=features, label=labels_onehot, ds_type=f"testinfer")
+    dataset_whole = Custom3DDataset(data=features, ds_type=f"testinfer")
     dataset_whole_dl = torch.utils.data.DataLoader(
                             dataset_whole,
                             batch_size=64,
@@ -85,14 +51,14 @@ def prepare_data(df, rev_label_map):
                             pin_memory=True,
                         )
     
-    return dataset_whole_dl, labels_onehot
+    return dataset_whole_dl
 
 
 
 # Define a wrapper class for the MONAI ResNet10 model
-class ResNet10Wrapper(nn.Module):
+class ResNet50Wrapper(nn.Module):
     def __init__(self, original_model):
-        super(ResNet10Wrapper, self).__init__()
+        super(ResNet50Wrapper, self).__init__()
         self.original_model = original_model
         # Remove the last fully connected layer
         self.features = nn.Sequential(*list(original_model.children())[:-1])
@@ -112,9 +78,7 @@ class ResNet10Wrapper(nn.Module):
 
 def run_3d(data, model_path, running_batch_name):
 
-    data['labels'] = ['mitochondria' for _ in range(len(data['gfp_image_names']))]
     features = data['gfp_images']
-    labels = ['bud_neck' if x == 'bud' else x for x in data['labels']]
     masks = data['masks']
     gfp_image_names = data['gfp_image_names']
     cw_well_names = data['cw_well_names']
@@ -123,19 +87,33 @@ def run_3d(data, model_path, running_batch_name):
     label_num_map = {0: 'ER', 1: 'Golgi', 2: 'actin', 3: 'bud_neck', 4: 'cell_periphery', 5: 'cytoplasm', 6: 'endosome', 7: 'lipid_particle', 8: 'mitochondria', 9: 'none', 10: 'nuclear_periphery', 11: 'nucleolus', 12: 'nucleus', 13: 'peroxisome', 14: 'spindle_pole', 15: 'vacuolar_membrane', 16: 'vacuole'}
     rev_label_map = {label_num_map[i]:i for i in label_num_map}
 
-    temp = pd.DataFrame({'cw_well_names':cw_well_names, 'gfp_image_names':gfp_image_names,'features':features})
-    temp = temp.sort_values(by=['gfp_image_names']).reset_index(drop=True)
 
-    temp_mask_df = pd.DataFrame({'mask_image_names':mask_image_names, 'masks':masks})
-    temp_mask_df = temp_mask_df.sort_values(by=['mask_image_names']).reset_index(drop=True)
-    temp['masks'] = temp_mask_df['masks']
-    temp['mask_image_names'] = temp_mask_df['mask_image_names']
+    temp = pd.DataFrame({
+        'cw_well_names': cw_well_names,
+        'gfp_image_names': gfp_image_names,
+        'features': features
+    })
+
+    temp['base_name'] = temp['gfp_image_names'].str.replace('_GFP.tif', '', regex=False)
 
 
-    print(temp.isna().sum())
+    temp_mask_df = pd.DataFrame({
+        'mask_image_names': mask_image_names,
+        'masks': masks
+    })
+
+    temp_mask_df['base_name'] = temp_mask_df['mask_image_names'].str.replace('_mask.tif', '', regex=False)
+
+
+    # Merge using base_name
+    temp = temp.merge(
+        temp_mask_df,
+        on='base_name',
+        how='inner'
+    )
+    temp = temp.drop(columns=['base_name'])
 
     features = temp['features']
-    labels = ['mitochondria' for _ in range(len(features))]
     masks = temp['masks']
     gfp_image_names = temp['gfp_image_names']
     mask_image_names = temp['mask_image_names']
@@ -143,44 +121,29 @@ def run_3d(data, model_path, running_batch_name):
 
 
     print('features:', len(features))
-    print('labels:',len(labels)) 
     print('gfp images names',len(gfp_image_names))
     print('cw names:', len(cw_well_names))
     print('mask image names:', len(mask_image_names))
     print('masks', len(masks))
-    df = pd.DataFrame({'features':features, 'labels':labels, 'cw_well_names':cw_well_names, 'gfp_image_names': gfp_image_names, 'mask_image_names':mask_image_names, 'masks':masks})
+    df = pd.DataFrame({'features':features, 'cw_well_names':cw_well_names, 'gfp_image_names': gfp_image_names, 'mask_image_names':mask_image_names, 'masks':masks})
 
 
-
-    dataset_whole_dl, labels_onehot = prepare_data(df, rev_label_map)
-    num_classes = 17
-
-    # Instantiate your model and wrap it
+    dataset_whole_dl = prepare_data(df)
     original_model = monai.networks.nets.resnet50(spatial_dims=3, n_input_channels=1, num_classes=17)
-    model = ResNet10Wrapper(original_model)
-
-    # Define optimizer and scheduler
-    optimizer = optim.Adam(model.parameters(), lr=0.0001, weight_decay=1e-4)
-    scheduler = lr_scheduler.MultiStepLR(optimizer, milestones=[10,20], gamma=0.5, last_epoch=-1, verbose=True)
-
-
-
-
-    criterion = nn.CrossEntropyLoss()
-    device = torch.device("cuda")
-    finalized_model = ResNet10Wrapper(original_model).to(device)
+    
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    finalized_model = ResNet50Wrapper(original_model).to(device)
     finalized_model.load_state_dict(torch.load(model_path, map_location=device))
 
 
     model=finalized_model
-    model.to(device)
     with torch.no_grad():
         preds = []
         all_pred_probs = []
         all_last_layer_output = []
         epoch_iterator_test = tqdm(dataset_whole_dl)
+        model.eval()
         for step, batch in enumerate(epoch_iterator_test):
-            model.eval()
             images = batch["image"].to(device)
 
             outputs = model(images)
@@ -205,8 +168,6 @@ def run_3d(data, model_path, running_batch_name):
 
     all_outs.to_csv(f"./penult_3d/penult_{running_batch_name}_3d.csv", index=None)
 
-
-
     #Predicted Probabilities
     ans3d = pd.DataFrame(all_pred_probs, columns=list(rev_label_map.keys()))
     ans3d['preds'] = preds
@@ -219,20 +180,13 @@ def run_3d(data, model_path, running_batch_name):
 
     features_2d_train_val = np.array([np.max(feat, axis=0) for feat in features])
     masks_2d_train_val = np.array(masks)
-    labels_2d_train_val = labels_onehot
-
-    regex = re.compile(r'\d+')
 
     # open a hdf5 file and create earrays
     f = h5py.File( f'./hdf5_2d_inputs/{running_batch_name}_2d.hdf5', mode='w')
     train_shape = (len(features_2d_train_val), 64*64*2)
-
-    f.create_dataset("Index1", (len(labels_2d_train_val),17), np.uint8)
     f.create_dataset("data1", train_shape, np.float64)
 
-
-    f["Index1"][...] = labels_2d_train_val
-
+    
     for i in range(len(features_2d_train_val)):
         mask_img = masks_2d_train_val[i]
         GFP_img = features_2d_train_val[i]
@@ -242,11 +196,11 @@ def run_3d(data, model_path, running_batch_name):
 
 
 if __name__ == '__main__':
-    os.mkdir("penult_3d")
-    os.mkdir("penult_2d")
-    os.mkdir("predictions_3d")
-    os.mkdir("predictions_2d")
-    os.mkdir("predictions_ensemble")
+    os.makedirs("penult_3d", exist_ok=True)
+    os.makedirs("penult_2d", exist_ok=True)
+    os.makedirs("predictions_3d", exist_ok=True)
+    os.makedirs("predictions_2d", exist_ok=True)
+    os.makedirs("predictions_ensemble", exist_ok=True)
 
     with open('infer_config_h5.yaml', 'r') as file:
         config = yaml.safe_load(file)
