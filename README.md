@@ -62,12 +62,12 @@ BATCH_SIZE: Adjust based on RAM/GPU
 python main.py
 ```
 
-## Inference: To Predict Subcellular Localization over those cells run
+## Inference: To Predict Subcellular Localization
 ```bash
 cd deeploc_3D_ensemble_codes
 ```
 
-Download the pretrained models:
+Download the pretrained models: [LINK] (https://zenodo.org/records/19503020?preview=1&token=eyJhbGciOiJIUzUxMiJ9.eyJpZCI6IjNlNTI1YTFhLWYwNWEtNDMyYi04ZWIzLTZkZjVjOThlZTc5OSIsImRhdGEiOnt9LCJyYW5kb20iOiJmNDY4Njc0ZTRmNzllNTk2MTBmYTVkZDQyNGE5NGM2OSJ9.CZnOO-X_ML6uaqRABOP9gDtxTJH6fPiSOZTgGC7rRTnDkALARlcCbIqVSz69Xj_O223anT5k-cpPFrASeLZyDQ)
 
 ### edit infer_config_h5.yaml
 ```yaml
