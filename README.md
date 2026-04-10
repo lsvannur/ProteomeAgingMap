@@ -18,38 +18,6 @@
 
 ---
 
-## Installation
-
-### System Requirements
-
-- **OS:** Linux (Ubuntu 20.04+ recommended), macOS, Windows  
-- **CPU:** ≥ 8 cores recommended  
-- **RAM:** ≥ 16 GB (≥ 64 GB recommended for large datasets)  
-- **Storage:** ≥ 50 GB free space  
-
----
-
-### Dependencies
-
-- **Python:** 3.9 – 3.11  
-- **Optional:** CUDA-enabled GPU for accelerated inference  
-
-**Tested Environment**
-- GPU: NVIDIA RTX 6000 Ada Generation  
-- CUDA: 12.9  
-- NVIDIA Driver: 575.57.08  
-
----
-
-## Setup
-
-```bash
-git clone https://github.com/lsvannur/ProteomeAgingMap.git
-cd ProteomeAgingMap/screening_codes
-conda env create -f environment.yml
-conda activate gpuenv
-mkdir input_batches ```
-
 # Installation
 
 ## System Requirements and Dependencies
