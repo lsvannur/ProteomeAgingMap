@@ -67,13 +67,13 @@ python main.py
 cd deeploc_3D_ensemble_codes
 ```
 
-Download the pretrained models: [LINK](https://zenodo.org/records/19503020?preview=1&token=eyJhbGciOiJIUzUxMiJ9.eyJpZCI6IjNlNTI1YTFhLWYwNWEtNDMyYi04ZWIzLTZkZjVjOThlZTc5OSIsImRhdGEiOnt9LCJyYW5kb20iOiJmNDY4Njc0ZTRmNzllNTk2MTBmYTVkZDQyNGE5NGM2OSJ9.CZnOO-X_ML6uaqRABOP9gDtxTJH6fPiSOZTgGC7rRTnDkALARlcCbIqVSz69Xj_O223anT5k-cpPFrASeLZyDQ)
+Download the pretrained models: [LINK](https://zenodo.org/records/19503020)
 
 ### edit infer_config_h5.yaml
 ```yaml
 running_batch_name: 'plate_name'
 batch_folder_path: '../input_batches/'
-modelpath_3d: '../../models/3d-Resnet10_3D_24_0.94.pth'
+modelpath_3d: '../../models/3d_model.pth'
 modelpath_2d: '../../models/transfer_v2/full_training_dataset.ckpt' 
 ```
 
