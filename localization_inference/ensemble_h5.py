@@ -25,23 +25,8 @@ for i in range(len(pred_2d_files)):
     ensemble_df[l] = 0.5*df_2d[l] + 0.5*df_3d[l]
 
   ensemble_preds = np.argmax(np.array(ensemble_df), axis=1)
-  true_labels=df_2d['true_labels']
-
-
-  acc_score = accuracy_score(true_labels, ensemble_preds)
-  f1 = f1_score(true_labels, ensemble_preds, average='weighted')
-  precision = precision_score(true_labels, ensemble_preds, average=None)
-  recall = recall_score(true_labels, ensemble_preds, average=None)
-
-
-  print(f"Accuracy: {acc_score}")
-  print(f"F1 Score: {f1}")
-  print(f"Precision: {precision}")
-  print(f"Recall: {recall}")
-
 
   ensemble_df['ensemble_pred'] = ensemble_preds
-  ensemble_df['true_labels'] = true_labels
   ensemble_df['gfp_image_names'] = df_3d['gfp_image_names']
   ensemble_df['cw_well_names'] = df_3d['cw_well_names']
   ensemble_df['combined'] = df_3d['combined']

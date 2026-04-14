@@ -22,7 +22,6 @@ def getSpecificChannels(flatImageData,channels,imageSize=64):
 
 def processBatch(curBatch):
     curImages = getSpecificChannels(curBatch['data'],[0,1])
-    curLabels = curBatch['Index'][:]
 
     cropSize = 60
     stretchLow = 0.0 # stretch channels lower percentile
@@ -35,13 +34,11 @@ def processBatch(curBatch):
                                means=None,stds=None,
                                stretchLow=stretchLow,stretchHigh=stretchHigh,
                                jitter=True,randTransform=True)
-    return {'data':processedBatch,'Index':curLabels}
+    return {'data':processedBatch}
 
 def processBatchTest(curBatch):
-    #print(curBatch)
     curImages = getSpecificChannels(curBatch['data'],[0,1])
-    curLabels = curBatch['Index'][:]
-
+    
     cropSize = 60
     stretchLow = 0.0 # stretch channels lower percentile
     stretchHigh = 100.0 # stretch channels upper percentile
@@ -52,8 +49,7 @@ def processBatchTest(curBatch):
                                rescale=False,stretch=True,
                                means=None,stds=None,
                                stretchLow=stretchLow,stretchHigh=stretchHigh)
-    return {'data':processedBatch,'Index':curLabels}
-
+    return {'data':processedBatch}
 
 def proccessCropsLoc(processedBatch,predicted_y,inputs,is_training,keep_prob,sess):
     crop_list = np.zeros((len(processedBatch), 5, 17))
@@ -73,9 +69,7 @@ def read_and_combine_datasets(train_path, test_path):
     with h5py.File(train_path, 'r') as trainH5:
         print(trainH5.keys())
         train_data = trainH5['data1'][:]
-        train_index = trainH5['Index1'][...]
-    return {'data': train_data, 'Index': train_index}
-
+    return {'data': train_data}
 
 def eval(combined_batch, locNetCkpt, running_batch_name, savepath, hdf5file, miniBatchSize=8):
     localizationTerms = ['ER', 'Golgi', 'actin', 'bud_neck', 'cell_periphery', 'cytoplasm', 'endosome', 'lipid_particle', 'mitochondria', 'none', 'nuclear_periphery', 'nucleolus', 'nucleus', 'peroxisome', 'spindle_pole', 'vacuolar_membrane', 'vacuole']
@@ -104,7 +98,7 @@ def eval(combined_batch, locNetCkpt, running_batch_name, savepath, hdf5file, min
     for batch_start in range(0, num_samples, miniBatchSize):
         print(f'Batch: {batch_start}/{num_samples}')
         batch_end = min(batch_start + miniBatchSize, num_samples)
-        curBatch = {'data': combined_batch['data'][batch_start:batch_end], 'Index': combined_batch['Index'][batch_start:batch_end]}
+        curBatch = {'data': combined_batch['data'][batch_start:batch_end]}
 
         # Process the current batch
         testBatchAll = processBatchTest(curBatch)
@@ -135,7 +129,7 @@ def eval(combined_batch, locNetCkpt, running_batch_name, savepath, hdf5file, min
 
     # Compute metrics after processing all batches
     preds = np.array(preds)
-    
+
     
     # Save the prediction dataframe
     allPred['preds'] = preds
@@ -167,7 +161,7 @@ def main(_):
         raise NameError('please download pretrained model')
 
     hdf5dir = './hdf5_2d_inputs/'
-    savepath = '../deeploc_3D_emsemble_model/'
+    savepath = '../inferences_h5/'
 
     
     for hdf5file in os.listdir(hdf5dir):
